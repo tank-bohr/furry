@@ -8,4 +8,4 @@ format_test() ->
     where => [eq, "f.a", "baz"]
   },
   Query = furry:format(SqlMap),
-  ?assertEqual([<<"SELECT a, b, c FROM foo WHERE f.a = $1">>, "baz"], Query).
+  ?assertEqual(["SELECT a, b, c FROM foo WHERE (f.a = $1)", "baz"], Query).
