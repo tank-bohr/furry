@@ -8,26 +8,48 @@
 %%====================================================================
 
 format(SqlMap) ->
-  #{select := Select, from := From, where := Where} = SqlMap,
-  [Operation, LValue, Binding] = Where,
-  FromClause = comp(From, [
-    fun map_string/1,
-    fun comma_join/1
-  ]),
-  WhereClause = comp([LValue, operation(Operation), "$1"], [
-    fun space_join/1,
-    fun paren_wrap/1
-  ]),
-  Query = space_join([
-    "SELECT", comma_join(Select),
-    "FROM",   FromClause,
-    "WHERE",  WhereClause
-  ]),
-  [Query, Binding].
+  format(SqlMap, undefined, []).
 
 %%====================================================================
 %% Internal functions
 %%====================================================================
+
+format(#{select := Select} = SqlMap, _, Bindings) ->
+  Sql = space_join(["SELECT", select_clause(Select)]),
+  format(maps:remove(select, SqlMap), Sql, Bindings);
+format(#{from := From} = SqlMap, Sql0, Bindings) ->
+  Sql = space_join([Sql0, "FROM", from_clause(From)]),
+  format(maps:remove(from, SqlMap), Sql, Bindings);
+format(#{where := Where} = SqlMap, Sql0, Bindings) ->
+  Sql = space_join([Sql0, "WHERE", where_clause(Where)]),
+  format(maps:remove(where, SqlMap), Sql, Bindings);
+format(#{}, Sql, Bindings) ->
+  [Sql | Bindings].
+
+select_clause(Select) ->
+  comma_join(Select).
+
+from_clause(From) ->
+  comma_join(lists:map(fun handle_from/1, From)).
+
+where_clause(Where) ->
+  handle_operation(Where).
+
+handle_from({TableName, Alias}) ->
+  space_join([
+    to_string(TableName),
+    "AS",
+    quotes_wrap(Alias)
+  ]);
+handle_from(TableName) ->
+  to_string(TableName).
+
+handle_operation([Operation | Args]) when is_atom(Operation) ->
+  paren_wrap(string:join(
+    lists:map(fun handle_operation/1, Args),
+    space_wrap(operation(Operation))
+  ));
+handle_operation(Arg) -> Arg.
 
 operation(eq) -> "=";
 operation(ne) -> "<>";
@@ -52,6 +74,18 @@ parameterize() -> not_implemented.
 
 paren_wrap(X) ->
   comp(["(", X, ")"], [
+    fun erlang:iolist_to_binary/1,
+    fun to_string/1
+  ]).
+
+quotes_wrap(X) ->
+  comp(["\"", X, "\""], [
+    fun erlang:iolist_to_binary/1,
+    fun to_string/1
+  ]).
+
+space_wrap(X) ->
+  comp([" ", X, " "], [
     fun erlang:iolist_to_binary/1,
     fun to_string/1
   ]).
