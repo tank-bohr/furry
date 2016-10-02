@@ -56,10 +56,10 @@ wrap_with_parentheses(Str) ->
   iolist_to_binary(["(", Str, ")"]).
 
 build_conditions(['and'|Conditions]) ->
-  Args = lists:map(fun build_conditions/1, Conditions),
+  Args = [build_conditions(C) || C <- Conditions],
   quote_and_join_and_wrap(Args, " AND ");
 build_conditions(['or'|Conditions]) ->
-  Args = lists:map(fun build_conditions/1, Conditions),
+  Args = [build_conditions(C) || C <- Conditions],
   quote_and_join_and_wrap(Args, " OR ");
 build_conditions([eq|Args]) ->
   quote_and_join_and_wrap(Args, " = ");

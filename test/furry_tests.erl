@@ -1,21 +1,23 @@
 -module(furry_tests).
 -include_lib("eunit/include/eunit.hrl").
 
+-define(TESTEE, furry).
+
 simple_select_test() ->
-  Query = furry:format(#{
+  Query = ?TESTEE:format(#{
     select => [1]
   }),
   ?assertEqual(<<"SELECT 1">>, Query).
 
 from_test() ->
-  Query = furry:format(#{
+  Query = ?TESTEE:format(#{
     select => [foo, bar],
     from => [table1]
   }),
   ?assertEqual(<<"SELECT foo, bar FROM table1">>, Query).
 
 where_test() ->
-  Query = furry:format(#{
+  Query = ?TESTEE:format(#{
     select => ['*'],
     from => [tab1],
     where => [eq, id, 17]
@@ -23,7 +25,7 @@ where_test() ->
   ?assertEqual(<<"SELECT * FROM tab1 WHERE (id = 17)">>, Query).
 
 complex_where_test() ->
-  Query = furry:format(#{
+  Query = ?TESTEE:format(#{
     select => ['*'],
     from => [t1],
     where => [
