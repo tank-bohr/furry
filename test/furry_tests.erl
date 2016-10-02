@@ -32,4 +32,4 @@ complex_where_test() ->
       [gt, id, 21]
     ]
   }),
-  ?assertEqual(<<"SELECT * FROM t1 WHERE (tel = \"17434\") AND (id > 21)">>, Query).
+  ?assertEqual(<<"SELECT * FROM t1 WHERE ((tel = \"17434\") AND (id > 21))">>, Query).

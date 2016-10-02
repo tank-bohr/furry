@@ -6,24 +6,17 @@ format(Map) ->
   format(Map, undefined).
 
 format(#{select := SelectClause} = Map, _) ->
-  Acc = [
-    <<"SELECT ">>,
-    quote_and_join(SelectClause, ", ")
-  ],
-  format(maps:remove(select, Map), Acc);
-format(#{from := FromClause} = Map, Acc0) ->
-  Acc = [
-    Acc0, <<" FROM ">>,
-    quote_and_join(FromClause, ", ")
-  ],
-  format(maps:remove(from, Map), Acc);
-format(#{where := WhereClause} = Map, Acc0) ->
-  Acc = [
-    Acc0,
-    <<" WHERE ">>,
-    build_conditions(WhereClause)
-  ],
-  format(maps:remove(where, Map), Acc);
+  format(maps:remove(select, Map), [
+    <<"SELECT ">>, quote_and_join(SelectClause, ", ")
+  ]);
+format(#{from := FromClause} = Map, Acc) ->
+  format(maps:remove(from, Map), [
+    Acc, <<" FROM ">>, quote_and_join(FromClause, ", ")
+  ]);
+format(#{where := WhereClause} = Map, Acc) ->
+  format(maps:remove(where, Map), [
+    Acc, <<" WHERE ">>, build_conditions(WhereClause)
+  ]);
 format(#{}, Acc) ->
   iolist_to_binary(Acc).
 
@@ -45,6 +38,12 @@ quote_and_join(Args, Sep) ->
     fun(List) -> join_binareis(List, Sep) end
   ]).
 
+quote_and_join_and_wrap(Args, Operation) ->
+  comp(Args, [
+    fun(List) -> quote_and_join(List, Operation) end,
+    fun wrap_with_parentheses/1
+  ]).
+
 join_binareis([], _Sep) ->
   [];
 join_binareis([H|T], Sep) ->
@@ -58,22 +57,22 @@ wrap_with_parentheses(Str) ->
 
 build_conditions(['and'|Conditions]) ->
   Args = lists:map(fun build_conditions/1, Conditions),
-  quote_and_join(Args, " AND ");
+  quote_and_join_and_wrap(Args, " AND ");
 build_conditions(['or'|Conditions]) ->
   Args = lists:map(fun build_conditions/1, Conditions),
-  quote_and_join(Args, " OR ");
+  quote_and_join_and_wrap(Args, " OR ");
 build_conditions([eq|Args]) ->
-  wrap_with_parentheses(quote_and_join(Args, " = "));
+  quote_and_join_and_wrap(Args, " = ");
 build_conditions([ne|Args]) ->
-  wrap_with_parentheses(quote_and_join(Args, " != "));
+  quote_and_join_and_wrap(Args, " != ");
 build_conditions([lt|Args]) ->
-  wrap_with_parentheses(quote_and_join(Args, " < "));
+  quote_and_join_and_wrap(Args, " < ");
 build_conditions([gt|Args]) ->
-  wrap_with_parentheses(quote_and_join(Args, " > "));
+  quote_and_join_and_wrap(Args, " > ");
 build_conditions([lte|Args]) ->
-  wrap_with_parentheses(quote_and_join(Args, " <= "));
+  quote_and_join_and_wrap(Args, " <= ");
 build_conditions([gte|Args]) ->
-  wrap_with_parentheses(quote_and_join(Args, " >= ")).
+  quote_and_join_and_wrap(Args, " >= ").
 
 comp(Init, Funs) ->
   lists:foldl(fun(Fun, AccIn) -> Fun(AccIn) end, Init, Funs).
