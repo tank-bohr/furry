@@ -16,7 +16,7 @@ from_test() ->
 
 where_test() ->
   Query = furry:format(#{
-    select => ["*"],
+    select => ['*'],
     from => [tab1],
     where => [eq, id, 17]
   }),
@@ -24,12 +24,12 @@ where_test() ->
 
 complex_where_test() ->
   Query = furry:format(#{
-    select => ["*"],
+    select => ['*'],
     from => [t1],
     where => [
       'and',
-      [eq, tel, 17434],
+      [eq, tel, "17434"],
       [gt, id, 21]
     ]
   }),
-  ?assertEqual(<<"SELECT * FROM t1 WHERE (tel = 17434) AND (id > 21)">>, Query).
+  ?assertEqual(<<"SELECT * FROM t1 WHERE (tel = \"17434\") AND (id > 21)">>, Query).

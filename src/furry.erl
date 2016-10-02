@@ -6,30 +6,36 @@ format(Map) ->
   format(Map, undefined).
 
 format(#{select := SelectClause} = Map, _) ->
-  List = lists:map(fun to_binary/1, SelectClause),
-  Acc = [<<"SELECT ">>, join_with_comma(List)],
+  Acc = [
+    <<"SELECT ">>,
+    join_with_comma(quote_args(SelectClause))
+  ],
   format(maps:remove(select, Map), Acc);
 format(#{from := FromClause} = Map, Acc0) ->
-  List = lists:map(fun to_binary/1, FromClause),
-  Acc = [Acc0, <<" FROM ">>, join_with_comma(List)],
+  Acc = [
+    Acc0, <<" FROM ">>,
+    join_with_comma(quote_args(FromClause))
+  ],
   format(maps:remove(from, Map), Acc);
 format(#{where := WhereClause} = Map, Acc0) ->
-  Where = build_conditions(WhereClause),
-  Acc = [Acc0, <<" WHERE ">>, Where],
+  Acc = [
+    Acc0,
+    <<" WHERE ">>,
+    build_conditions(WhereClause)
+  ],
   format(maps:remove(where, Map), Acc);
 format(#{}, Acc) ->
   iolist_to_binary(Acc).
 
-to_binary(Atom) when is_atom(Atom) ->
+quote_args(Args) ->
+  lists:map(fun quote/1, Args).
+
+quote(Atom) when is_atom(Atom) ->
   atom_to_binary(Atom, utf8);
-to_binary(Int) when is_number(Int) ->
+quote(Int) when is_number(Int) ->
   integer_to_binary(Int);
-to_binary(List) when is_list(List) ->
-  iolist_to_binary(List);
-to_binary(Bin) when is_binary(Bin) ->
-  Bin;
-to_binary(_) ->
-  <<>>.
+quote(List) when is_list(List) ->
+  wrap_with_quots(List).
 
 join_with_comma(List) ->
   join_binareis(List, ", ").
@@ -39,8 +45,11 @@ join_binareis([], _Sep) ->
 join_binareis([H|T], Sep) ->
   iolist_to_binary([H, [[Sep, X] || X <- T]]).
 
-wrap_with_parentheses(Bin) ->
-  iolist_to_binary(["(", Bin, ")"]).
+wrap_with_quots(Str) ->
+  iolist_to_binary(["\"", Str, "\""]).
+
+wrap_with_parentheses(Str) ->
+  iolist_to_binary(["(", Str, ")"]).
 
 build_conditions(['and'|Conditions]) ->
   ConditionBinaries = [
@@ -49,8 +58,6 @@ build_conditions(['and'|Conditions]) ->
   ],
   join_binareis(ConditionBinaries, " AND ");
 build_conditions([eq|Args]) ->
-  Binaries = [to_binary(X) || X <- Args],
-  join_binareis(Binaries, " = ");
+  join_binareis(quote_args(Args), " = ");
 build_conditions([gt|Args]) ->
-  Binaries = [to_binary(X) || X <- Args],
-  join_binareis(Binaries, " > ").
+  join_binareis(quote_args(Args), " > ").
