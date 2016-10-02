@@ -20,7 +20,7 @@ where_test() ->
     from => [tab1],
     where => [eq, id, 17]
   }),
-  ?assertEqual(<<"SELECT * FROM tab1 WHERE id = 17">>, Query).
+  ?assertEqual(<<"SELECT * FROM tab1 WHERE (id = 17)">>, Query).
 
 complex_where_test() ->
   Query = furry:format(#{

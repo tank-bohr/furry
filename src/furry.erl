@@ -57,15 +57,23 @@ wrap_with_parentheses(Str) ->
   iolist_to_binary(["(", Str, ")"]).
 
 build_conditions(['and'|Conditions]) ->
-  PreparedConditions = [
-    wrap_with_parentheses(build_conditions(C)) ||
-    C <- Conditions
-  ],
-  quote_and_join(PreparedConditions, " AND ");
+  Args = lists:map(fun build_conditions/1, Conditions),
+  quote_and_join(Args, " AND ");
+build_conditions(['or'|Conditions]) ->
+  Args = lists:map(fun build_conditions/1, Conditions),
+  quote_and_join(Args, " OR ");
 build_conditions([eq|Args]) ->
-  quote_and_join(Args, " = ");
+  wrap_with_parentheses(quote_and_join(Args, " = "));
+build_conditions([ne|Args]) ->
+  wrap_with_parentheses(quote_and_join(Args, " != "));
+build_conditions([lt|Args]) ->
+  wrap_with_parentheses(quote_and_join(Args, " < "));
 build_conditions([gt|Args]) ->
-  quote_and_join(Args, " > ").
+  wrap_with_parentheses(quote_and_join(Args, " > "));
+build_conditions([lte|Args]) ->
+  wrap_with_parentheses(quote_and_join(Args, " <= "));
+build_conditions([gte|Args]) ->
+  wrap_with_parentheses(quote_and_join(Args, " >= ")).
 
 comp(Init, Funs) ->
   lists:foldl(fun(Fun, AccIn) -> Fun(AccIn) end, Init, Funs).
