@@ -8,13 +8,13 @@ format(Map) ->
 format(#{select := SelectClause} = Map, _) ->
   Acc = [
     <<"SELECT ">>,
-    join_with_comma(quote_args(SelectClause))
+    quote_and_join(SelectClause, ", ")
   ],
   format(maps:remove(select, Map), Acc);
 format(#{from := FromClause} = Map, Acc0) ->
   Acc = [
     Acc0, <<" FROM ">>,
-    join_with_comma(quote_args(FromClause))
+    quote_and_join(FromClause, ", ")
   ],
   format(maps:remove(from, Map), Acc);
 format(#{where := WhereClause} = Map, Acc0) ->
@@ -35,10 +35,15 @@ quote(Atom) when is_atom(Atom) ->
 quote(Int) when is_number(Int) ->
   integer_to_binary(Int);
 quote(List) when is_list(List) ->
-  wrap_with_quots(List).
+  wrap_with_quots(List);
+quote(Bin) when is_binary(Bin) ->
+  Bin.
 
-join_with_comma(List) ->
-  join_binareis(List, ", ").
+quote_and_join(Args, Sep) ->
+  comp(Args, [
+    fun quote_args/1,
+    fun(List) -> join_binareis(List, Sep) end
+  ]).
 
 join_binareis([], _Sep) ->
   [];
@@ -52,12 +57,15 @@ wrap_with_parentheses(Str) ->
   iolist_to_binary(["(", Str, ")"]).
 
 build_conditions(['and'|Conditions]) ->
-  ConditionBinaries = [
+  PreparedConditions = [
     wrap_with_parentheses(build_conditions(C)) ||
     C <- Conditions
   ],
-  join_binareis(ConditionBinaries, " AND ");
+  quote_and_join(PreparedConditions, " AND ");
 build_conditions([eq|Args]) ->
-  join_binareis(quote_args(Args), " = ");
+  quote_and_join(Args, " = ");
 build_conditions([gt|Args]) ->
-  join_binareis(quote_args(Args), " > ").
+  quote_and_join(Args, " > ").
+
+comp(Init, Funs) ->
+  lists:foldl(fun(Fun, AccIn) -> Fun(AccIn) end, Init, Funs).
