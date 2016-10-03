@@ -17,6 +17,19 @@ format(#{where := WhereClause} = Map, Acc) ->
   format(maps:remove(where, Map), [
     Acc, <<" WHERE ">>, build_conditions(WhereClause)
   ]);
+format(#{insert_into := Table} = Map, _) ->
+  format(maps:remove(insert_into, Map), [
+    <<"INSERT INTO ">>, quote_args(Table)
+  ]);
+format(#{columns := Columns} = Map, Acc) ->
+  format(maps:remove(columns, Map), [
+    Acc, " ", quote_and_join_and_wrap(Columns, ", ")
+  ]);
+format(#{values := Values} = Map, Acc) ->
+  format(maps:remove(values, Map), [
+    Acc, " VALUES ", join_binareis(
+      [quote_and_join_and_wrap(V, ", ") || V <- Values], ", ")
+  ]);
 format(#{}, Acc) ->
   iolist_to_binary(Acc).
 

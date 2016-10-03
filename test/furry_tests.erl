@@ -35,3 +35,11 @@ complex_where_test() ->
     ]
   }),
   ?assertEqual(<<"SELECT * FROM t1 WHERE ((tel = \"17434\") AND (id > 21))">>, Query).
+
+insert_into_test() ->
+  Query = ?TESTEE:format(#{
+    insert_into => [tab2],
+    columns => [foo, bar, baz],
+    values => [["Foo", "Bar", 19], ["Test", "Value", 21]]
+  }),
+  ?assertEqual(<<"INSERT INTO tab2 (foo, bar, baz) VALUES (\"Foo\", \"Bar\", 19), (\"Test\", \"Value\", 21)">>, Query).
