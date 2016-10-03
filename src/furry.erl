@@ -17,6 +17,14 @@ format(#{delete_from := Table} = Map, _) ->
   format(maps:remove(delete_from, Map), [
     "DELETE FROM ", quote(Table)
   ]);
+format(#{update := Table} = Map, _) ->
+  format(maps:remove(update, Map), [
+    "UPDATE ", quote(Table)
+  ]);
+format(#{set := Set} = Map, Acc) ->
+  format(maps:remove(set, Map), [
+    Acc, " SET ", build_assignments(Set)
+  ]);
 format(#{from := FromClause} = Map, Acc) ->
   format(maps:remove(from, Map), [
     Acc, " FROM ", quote_and_join(FromClause, ", ")
@@ -55,9 +63,9 @@ quote_and_join(Args, Sep) ->
     curry(fun join/2, [Sep])
   ]).
 
-quote_and_join_and_wrap(Args, Operation) ->
+quote_and_join_and_wrap(Args, Sep) ->
   comp(Args, [
-    curry(fun quote_and_join/2, [Operation]),
+    curry(fun quote_and_join/2, [Sep]),
     fun wrap_with_parentheses/1
   ]).
 
@@ -90,6 +98,12 @@ build_conditions([lte|Args]) ->
   quote_and_join_and_wrap(Args, " <= ");
 build_conditions([gte|Args]) ->
   quote_and_join_and_wrap(Args, " >= ").
+
+build_assignments(List) ->
+  comp(List, [
+    fun(Tuples) -> [quote_and_join([K, V], " = ") || {K, V} <- Tuples] end,
+    curry(fun join/2, [", "])
+  ]).
 
 comp(Init, Funs) ->
   lists:foldl(fun(Fun, AccIn) -> Fun(AccIn) end, Init, Funs).

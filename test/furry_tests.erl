@@ -50,3 +50,14 @@ delete_from_test() ->
     where => [lte, id, 100]
   }),
   ?assertEqual(<<"DELETE FROM tab3 WHERE (id <= 100)">>, Query).
+
+update_test() ->
+  Query = ?TESTEE:format(#{
+    update => tab4,
+    set => [
+      {foo, "Foo"},
+      {bar, 17}
+    ],
+    where => [eq, baz, 19]
+  }),
+  ?assertEqual(<<"UPDATE tab4 SET foo = \"Foo\", bar = 17 WHERE (baz = 19)">>, Query).
