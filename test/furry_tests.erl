@@ -38,7 +38,7 @@ complex_where_test() ->
 
 insert_into_test() ->
   Query = ?TESTEE:format(#{
-    insert_into => [tab2],
+    insert_into => tab2,
     columns => [foo, bar, baz],
     values => [["Foo", "Bar", 19], ["Test", "Value", 21]]
   }),

@@ -19,7 +19,7 @@ format(#{where := WhereClause} = Map, Acc) ->
   ]);
 format(#{insert_into := Table} = Map, _) ->
   format(maps:remove(insert_into, Map), [
-    <<"INSERT INTO ">>, quote_args(Table)
+    <<"INSERT INTO ">>, quote(Table)
   ]);
 format(#{columns := Columns} = Map, Acc) ->
   format(maps:remove(columns, Map), [
