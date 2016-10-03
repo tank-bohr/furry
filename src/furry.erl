@@ -27,7 +27,7 @@ format(#{columns := Columns} = Map, Acc) ->
   ]);
 format(#{values := Values} = Map, Acc) ->
   format(maps:remove(values, Map), [
-    Acc, " VALUES ", join_binareis(
+    Acc, " VALUES ", join(
       [quote_and_join_and_wrap(V, ", ") || V <- Values], ", ")
   ]);
 format(#{}, Acc) ->
@@ -48,7 +48,7 @@ quote(Bin) when is_binary(Bin) ->
 quote_and_join(Args, Sep) ->
   comp(Args, [
     fun quote_args/1,
-    curry(fun join_binareis/2, [Sep])
+    curry(fun join/2, [Sep])
   ]).
 
 quote_and_join_and_wrap(Args, Operation) ->
@@ -57,9 +57,9 @@ quote_and_join_and_wrap(Args, Operation) ->
     fun wrap_with_parentheses/1
   ]).
 
-join_binareis([], _Sep) ->
+join([], _Sep) ->
   [];
-join_binareis([H|T], Sep) ->
+join([H|T], Sep) ->
   iolist_to_binary([H, [[Sep, X] || X <- T]]).
 
 wrap_with_quots(Str) ->
