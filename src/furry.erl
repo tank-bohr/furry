@@ -7,19 +7,23 @@ format(Map) ->
 
 format(#{select := SelectClause} = Map, _) ->
   format(maps:remove(select, Map), [
-    <<"SELECT ">>, quote_and_join(SelectClause, ", ")
-  ]);
-format(#{from := FromClause} = Map, Acc) ->
-  format(maps:remove(from, Map), [
-    Acc, <<" FROM ">>, quote_and_join(FromClause, ", ")
-  ]);
-format(#{where := WhereClause} = Map, Acc) ->
-  format(maps:remove(where, Map), [
-    Acc, <<" WHERE ">>, build_conditions(WhereClause)
+    "SELECT ", quote_and_join(SelectClause, ", ")
   ]);
 format(#{insert_into := Table} = Map, _) ->
   format(maps:remove(insert_into, Map), [
-    <<"INSERT INTO ">>, quote(Table)
+    "INSERT INTO ", quote(Table)
+  ]);
+format(#{delete_from := Table} = Map, _) ->
+  format(maps:remove(delete_from, Map), [
+    "DELETE FROM ", quote(Table)
+  ]);
+format(#{from := FromClause} = Map, Acc) ->
+  format(maps:remove(from, Map), [
+    Acc, " FROM ", quote_and_join(FromClause, ", ")
+  ]);
+format(#{where := WhereClause} = Map, Acc) ->
+  format(maps:remove(where, Map), [
+    Acc, " WHERE ", build_conditions(WhereClause)
   ]);
 format(#{columns := Columns} = Map, Acc) ->
   format(maps:remove(columns, Map), [

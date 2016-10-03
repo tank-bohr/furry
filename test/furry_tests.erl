@@ -43,3 +43,10 @@ insert_into_test() ->
     values => [["Foo", "Bar", 19], ["Test", "Value", 21]]
   }),
   ?assertEqual(<<"INSERT INTO tab2 (foo, bar, baz) VALUES (\"Foo\", \"Bar\", 19), (\"Test\", \"Value\", 21)">>, Query).
+
+delete_from_test() ->
+  Query = ?TESTEE:format(#{
+    delete_from => tab3,
+    where => [lte, id, 100]
+  }),
+  ?assertEqual(<<"DELETE FROM tab3 WHERE (id <= 100)">>, Query).
