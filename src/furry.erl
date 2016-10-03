@@ -48,12 +48,12 @@ quote(Bin) when is_binary(Bin) ->
 quote_and_join(Args, Sep) ->
   comp(Args, [
     fun quote_args/1,
-    fun(List) -> join_binareis(List, Sep) end
+    curry(fun join_binareis/2, [Sep])
   ]).
 
 quote_and_join_and_wrap(Args, Operation) ->
   comp(Args, [
-    fun(List) -> quote_and_join(List, Operation) end,
+    curry(fun quote_and_join/2, [Operation]),
     fun wrap_with_parentheses/1
   ]).
 
@@ -89,3 +89,6 @@ build_conditions([gte|Args]) ->
 
 comp(Init, Funs) ->
   lists:foldl(fun(Fun, AccIn) -> Fun(AccIn) end, Init, Funs).
+
+curry(Fun, Args) ->
+  fun(FirstArg) -> apply(Fun, [FirstArg|Args]) end.
