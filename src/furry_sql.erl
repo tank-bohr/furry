@@ -1,4 +1,4 @@
--module(furry).
+-module(furry_sql).
 
 -export([format/1]).
 

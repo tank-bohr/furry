@@ -1,7 +1,7 @@
--module(furry_tests).
+-module(furry_sql_tests).
 -include_lib("eunit/include/eunit.hrl").
 
--define(TESTEE, furry).
+-define(TESTEE, furry_sql).
 
 simple_select_test() ->
   Query = ?TESTEE:format(#{
